@@ -1,4 +1,6 @@
-# Implementation Backlog
+# Reference Implementation Roadmap
+
+This is a future roadmap for maintainers who want to build a minimal reference implementation. It is not a statement that this repository already contains a production-ready runtime or complete plugin collection.
 
 ## P0 — control plane
 
