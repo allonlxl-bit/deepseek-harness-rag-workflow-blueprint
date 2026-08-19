@@ -13,6 +13,7 @@ This repository is an early public research draft. It is not a production deploy
 ## Contents
 
 - [`docs/deep-research-report.md`](docs/deep-research-report.md) — complete architecture and implementation research draft
+- [`docs/related-work.md`](docs/related-work.md) — related projects, boundaries and positioning
 - The report includes an implementation-grounded revision covering registry/index, deterministic workflow orchestration, site packs, evidence receipts, candidate-only publication and fail-closed acceptance.
 - [`architecture/`](architecture/) — Mermaid system and lifecycle diagrams
 - [`schemas/`](schemas/) — JSON Schemas for manifests, plans and evidence
@@ -20,6 +21,7 @@ This repository is an early public research draft. It is not a production deploy
 - [`agent-instructions/`](agent-instructions/) — implementation and review instructions
 - [`backlog/`](backlog/) — future reference-implementation roadmap
 - [`evaluations/`](evaluations/) — golden-set and evaluation protocol templates
+- [`evaluations/comparative-evaluation.md`](evaluations/comparative-evaluation.md) — fair baseline and advantage evaluation plan
 - [`playbooks/`](playbooks/) — routing, retrieval and candidate-publication failure procedures
 - [`examples/`](examples/) — neutral manifests and workflow examples
 - `docs/` — future topic-specific documents
