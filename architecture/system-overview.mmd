@@ -1,0 +1,16 @@
+flowchart TD
+    Q["User Task"] --> I["Ingress Adapter"]
+    I --> R["Plugin Registry / Index"]
+    R --> X["Task Index Router"]
+    X --> W["Workflow Orchestrator"]
+    W --> P["Task Profile"]
+    P --> S["Brand Site Pack"]
+    S --> N["Typed Plugin Nodes"]
+    N --> E["Evidence Ledger"]
+    N --> V["Verifier"]
+    V -->|PASS| C["Candidate Publication"]
+    V -->|HOLD| H["Human Review / Rework"]
+    C --> U["Live URL Acceptance"]
+    U --> A["Session / Audit / Receipt"]
+    W -.-> A
+    R -.-> A

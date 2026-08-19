@@ -1,0 +1,22 @@
+workflow_id: technical-solution-example
+task_type: technical_solution
+production_write: false
+nodes:
+  - id: ingress
+    depends_on: []
+  - id: plugin_index
+    depends_on: [ingress]
+  - id: route_resolution
+    depends_on: [plugin_index]
+  - id: material_read
+    depends_on: [route_resolution]
+  - id: renderer
+    depends_on: [material_read]
+  - id: verifier
+    depends_on: [renderer]
+  - id: candidate_publication
+    depends_on: [verifier]
+  - id: live_url_check
+    depends_on: [candidate_publication]
+  - id: audit_close
+    depends_on: [live_url_check]

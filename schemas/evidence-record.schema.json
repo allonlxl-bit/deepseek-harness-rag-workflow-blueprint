@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.org/plugin-indexed-rag-harness/evidence-record.schema.json",
+  "title": "Evidence Record",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["evidence_id", "source_ref", "content_hash", "scope", "authority", "retrieved_at"],
+  "properties": {
+    "evidence_id": {"type": "string"},
+    "source_ref": {"type": "string"},
+    "content_hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "scope": {"type": "object", "required": ["brand", "product"], "properties": {"brand": {"type": "string"}, "product": {"type": "string"}, "market": {"type": "array", "items": {"type": "string"}}}},
+    "authority": {"type": "integer", "minimum": 0, "maximum": 100},
+    "retrieved_at": {"type": "string", "format": "date-time"},
+    "citation_anchor": {"type": "string"}
+  }
+}

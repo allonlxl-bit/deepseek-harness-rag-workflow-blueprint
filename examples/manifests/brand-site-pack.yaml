@@ -1,0 +1,13 @@
+id: brand-a-site-pack
+version: 0.1.0-candidate
+capabilities:
+  - route_resolution
+  - layout_profile
+  - renderer_dispatch
+scopes:
+  - brand-a
+permissions:
+  - read_only
+depends_on:
+  - task-index-router
+production_write: false

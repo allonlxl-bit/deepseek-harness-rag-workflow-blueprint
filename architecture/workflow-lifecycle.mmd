@@ -1,0 +1,11 @@
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> RUNNING
+    RUNNING --> PASS
+    RUNNING --> RETRYABLE_FAILED
+    RETRYABLE_FAILED --> RUNNING: within retry budget
+    RUNNING --> HOLD: missing input or policy failure
+    PASS --> [*]
+    HOLD --> COMPENSATED: candidate effect requires cleanup
+    HOLD --> [*]: no effect / human handoff
+    COMPENSATED --> [*]
