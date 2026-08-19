@@ -2,13 +2,13 @@
 
 ## 执行摘要与适用边界
 
-截至 **2026 年 8 月 19 日**，DeepSeek Harness 已公开为开源 Agent Harness，其核心特征是基于 Cordis 的“Everything is a Plugin”：模型适配器、工具注册表、Session Log、Agent Loop 等都可以作为插件替换；Cordis 通过共享 Context、服务依赖、事件与可撤销 Effect 管理运行期组合。与此同时，DeepSeek 官方仍将 Harness 标记为 **Developer Preview**，明确提示存在兼容性破坏性更新。因此，本报告的结论不是“把企业业务永久绑定到当前 DeepSeek Harness 版本”，而是采用 **Harness-first、Contract-owned、Runtime-replaceable** 的策略：以 Harness 作为首选运行底座，但由企业自己拥有插件契约、数据契约、证据契约和治理契约。citeturn14search0turn14search5turn14search9
+截至 **2026 年 8 月 19 日**，DeepSeek Harness 已公开为开源 Agent Harness，其核心特征是基于 Cordis 的“Everything is a Plugin”：模型适配器、工具注册表、Session Log、Agent Loop 等都可以作为插件替换；Cordis 通过共享 Context、服务依赖、事件与可撤销 Effect 管理运行期组合。与此同时，DeepSeek 官方仍将 Harness 标记为 **Developer Preview**，明确提示存在兼容性破坏性更新。因此，本报告的结论不是“把企业业务永久绑定到当前 DeepSeek Harness 版本”，而是采用 **Harness-first、Contract-owned、Runtime-replaceable** 的策略：以 Harness 作为首选运行底座，但由企业自己拥有插件契约、数据契约、证据契约和治理契约。
 
 本文的核心架构判断是：
 
 > **对于多品牌、多产品、多语言、多渠道内容生产企业，最值得建设的不是一个越来越大的单库 RAG，也不是大量“品牌 × 产品 × 渠道 × 任务”的组合插件，而是一张可寻址的“插件索引图”。**
 
-插件在这里首先是一个**知识域或能力域的可寻址节点**。查询先通过 Query Analyzer 解析成结构化索引键，Router 在 Plugin Index 中寻找最适合的入口；进入插件之后才进行局部 RAG、工具调用、子插件递归导航或跨域检索。这个设计与 Modular RAG 提出的 Routing、Scheduling、Fusion、Linear、Conditional、Branching、Looping 等模块化模式相吻合，也与 Agentic RAG 将检索纳入规划、反思和工具使用循环的方向一致。citeturn14search2turn14search3turn14search7
+插件在这里首先是一个**知识域或能力域的可寻址节点**。查询先通过 Query Analyzer 解析成结构化索引键，Router 在 Plugin Index 中寻找最适合的入口；进入插件之后才进行局部 RAG、工具调用、子插件递归导航或跨域检索。这个设计与 Modular RAG 提出的 Routing、Scheduling、Fusion、Linear、Conditional、Branching、Looping 等模块化模式相吻合，也与 Agentic RAG 将检索纳入规划、反思和工具使用循环的方向一致。
 
 必须区分两个“插件”概念。**DeepSeek Harness 原生插件是运行期模块/服务，不天然等于“语义插件索引”**；本文因此建议新增一个企业级 `PluginRegistryService / PluginIndexService`，它本身作为 Harness 插件运行，但负责索引所有业务能力 Manifest。换言之：
 
@@ -25,7 +25,7 @@ Enterprise Capability Plugin
 + 可调用能力
 ```
 
-这也是对前面多轮讨论最重要的工程化落实：**“插件是索引关系”不是 DeepSeek Harness 原生已经内置的一套业务路由机制，而是建立在 Harness 插件运行机制之上的企业语义层。** LlamaIndex 的 `RouterRetriever`、`RecursiveRetriever`/`IndexNode` 已提供类似的工程参考：一个检索结果可以指向另一个 Retriever 或 Query Engine，并继续递归检索，这说明“先检索入口，再进入入口继续检索”的模式在现有 RAG 框架中具有成熟的实现先例。citeturn18view0
+这也是对前面多轮讨论最重要的工程化落实：**“插件是索引关系”不是 DeepSeek Harness 原生已经内置的一套业务路由机制，而是建立在 Harness 插件运行机制之上的企业语义层。** LlamaIndex 的 `RouterRetriever`、`RecursiveRetriever`/`IndexNode` 已提供类似的工程参考：一个检索结果可以指向另一个 Retriever 或 Query Engine，并继续递归检索，这说明“先检索入口，再进入入口继续检索”的模式在现有 RAG 框架中具有成熟的实现先例。
 
 **最终推荐架构可以压缩成以下公式：**
 
@@ -56,7 +56,7 @@ Verifier      = 事实、品牌、安全、法律和输出治理
 Session/Audit = 可重放的运行事实
 ```
 
-DeepSeek Harness 官方架构将 Session Log 作为模型可见上下文的重要持久化基础，并强调模型可见信息应能够从日志重建；Cordis 插件的注册也被设计成随插件卸载而撤销的 Effect。这两点非常适合构建本文所要求的可审计 Agent 平台。citeturn14search0turn14search1
+DeepSeek Harness 官方架构将 Session Log 作为模型可见上下文的重要持久化基础，并强调模型可见信息应能够从日志重建；Cordis 插件的注册也被设计成随插件卸载而撤销的 Effect。这两点非常适合构建本文所要求的可审计 Agent 平台。
 
 **适用场景。** 本架构尤其适合品牌和知识边界不断扩大的企业，例如同时经营多个工业品牌，每个品牌拥有产品白皮书、参数表、案例、FAQ、品牌规范，再面向英语、德语、西班牙语等市场，通过官网、SEO、LinkedIn、Facebook、Pinterest、邮件、视频等渠道持续生成内容。若企业只有一个几十份文件的 FAQ 库，本架构会明显过重；若企业已经出现“品牌串线、产品知识混用、多语言知识不一致、同一资料被多个 Agent 重复维护、换模型牵动全部代码”等问题，则其收益开始显著。
 
@@ -72,7 +72,7 @@ DeepSeek Harness 官方架构将 Session Log 作为模型可见上下文的重�
 
 ## 总体架构与组件关系
 
-DeepSeek Harness 的官方设计中，Cordis Context 是插件贡献 Service、typed event 与 reversible effect 的共享环境；Agent Loop 本身也可替换。Harness 的 Profile 又能够按顺序组合 Bundle 与 `cordis.patch.yml` 覆盖层，因此很适合把不同部署环境、模型后端和业务能力做成组合配置。citeturn14search0turn14search29turn14search25
+DeepSeek Harness 的官方设计中，Cordis Context 是插件贡献 Service、typed event 与 reversible effect 的共享环境；Agent Loop 本身也可替换。Harness 的 Profile 又能够按顺序组合 Bundle 与 `cordis.patch.yml` 覆盖层，因此很适合把不同部署环境、模型后端和业务能力做成组合配置。
 
 但是生产架构应当把“可替换”与“必须稳定”区分开。**运行时可以替换，企业契约不能随 Harness 版本一起漂移。**
 
@@ -87,7 +87,7 @@ IndexAlias
 RunBudget
 ```
 
-它们可以全部由 Cordis Provider 提供，但 Consumer 只能依赖 Service Definition，不能直接依赖具体实现。这也符合 Harness 官方 Capability Seam 中“Definition / Provider / Consumer”分离的设计方向。citeturn14search28turn14search25
+它们可以全部由 Cordis Provider 提供，但 Consumer 只能依赖 Service Definition，不能直接依赖具体实现。这也符合 Harness 官方 Capability Seam 中“Definition / Provider / Consumer”分离的设计方向。
 
 **端到端流程图：**
 
@@ -137,7 +137,7 @@ flowchart TD
     SL --> OT[OpenTelemetry / Metrics / Logs / Traces]
 ```
 
-这个流程的关键不是“每次都运行 Agent Loop”。LangGraph 官方也明确区分了 **Workflow 的预定路径**与 **Agent 的动态路径和工具选择**；其 Agentic RAG 示例又展示了“决定是否检索 → 评估检索结果 → 重写查询 → 再检索 → 生成”的动态流程。因此生产系统最好让确定性任务走 Workflow，只有真正需要多步推理、跨域取证或失败恢复的任务进入 Agent Loop。citeturn16search0turn16search7
+这个流程的关键不是“每次都运行 Agent Loop”。LangGraph 官方也明确区分了 **Workflow 的预定路径**与 **Agent 的动态路径和工具选择**；其 Agentic RAG 示例又展示了“决定是否检索 → 评估检索结果 → 重写查询 → 再检索 → 生成”的动态流程。因此生产系统最好让确定性任务走 Workflow，只有真正需要多步推理、跨域取证或失败恢复的任务进入 Agent Loop。
 
 对内容生产企业，一个实用策略是：
 
@@ -286,7 +286,7 @@ channel.linkedin
 
 ## 插件契约、接口与数据模型
 
-DeepSeek Harness 原生打包体系目前通过 `package.json` 中的 `dsh.bundle` 指向 Bundle Patch，通过 `dsh.profile` 声明有序 Bundle 列表；Profile 再叠加自身、Home 层和命令行 Patch。企业的语义 Manifest 不应该替代这个原生机制，而应作为一层独立、稳定的企业契约。citeturn14search29turn14search8
+DeepSeek Harness 原生打包体系目前通过 `package.json` 中的 `dsh.bundle` 指向 Bundle Patch，通过 `dsh.profile` 声明有序 Bundle 列表；Profile 再叠加自身、Home 层和命令行 Patch。企业的语义 Manifest 不应该替代这个原生机制，而应作为一层独立、稳定的企业契约。
 
 **建议采用“双 Manifest”结构：**
 
@@ -458,7 +458,7 @@ spec:
 }
 ```
 
-**运行时生命周期契约。** Cordis 官方生命周期包含从待加载到 Loading、Active、Failed，以及从 Active 到 Unloading、Disposed 的状态变化；依赖可通过注入声明，依赖消失时相关插件能够卸载，并在依赖恢复后重新加载。Cordis 的事件和注册 Effect 可随卸载自动清理，这比让插件自行维护大量全局资源更安全。citeturn3view0turn14search1
+**运行时生命周期契约。** Cordis 官方生命周期包含从待加载到 Loading、Active、Failed，以及从 Active 到 Unloading、Disposed 的状态变化；依赖可通过注入声明，依赖消失时相关插件能够卸载，并在依赖恢复后重新加载。Cordis 的事件和注册 Effect 可随卸载自动清理，这比让插件自行维护大量全局资源更安全。
 
 企业层在此之上增加：
 
@@ -556,7 +556,7 @@ spec:
 | `dense_vector` | vector | ANN | 是 | 语义检索 |
 | `sparse_vector` | sparse | Sparse/BM25 | 可选 | 混合检索 |
 
-Pinecone 官方数据模型同样强调 Record ID、Dense/Sparse Vector 和可过滤 Metadata；其官方多租户方案建议使用 Namespace 做租户隔离，而 Metadata Filter 用于进一步缩小范围。Milvus 和 Weaviate 也原生支持向量、关键词/全文、混合搜索与过滤。citeturn17search1turn17search7turn15search13turn15search8
+Pinecone 官方数据模型同样强调 Record ID、Dense/Sparse Vector 和可过滤 Metadata；其官方多租户方案建议使用 Namespace 做租户隔离，而 Metadata Filter 用于进一步缩小范围。Milvus 和 Weaviate 也原生支持向量、关键词/全文、混合搜索与过滤。
 
 建议把**租户/法律隔离边界**做成硬 Partition/Namespace，把品牌、产品、语言和市场作为次级 Metadata Filter。只有确实存在严格保密边界的品牌再升级为独立 Namespace。不要为每一个产品、国家和语言都建立物理索引，否则运维复杂度会反向增长。
 
@@ -657,7 +657,7 @@ aliases:
     - Saucen-Verpackungslinie
 ```
 
-多语言检索不建议完全依赖“先翻译成英语再检索”，因为型号、品牌、法规术语和行业术语可能在翻译中损失精确匹配。更稳妥的设计是**保留原始 Query + Canonical Query + 若干检索变体**，同时运行原文 BM25 与跨语言 Dense Search。BGE-M3 论文报告其支持 100 多种语言，并统一支持 dense、multi-vector 与 sparse retrieval，这类多语言模型非常适合担任跨语言 Dense 层；具体模型仍应通过企业自己的多语言评测集决定。citeturn7academia27
+多语言检索不建议完全依赖“先翻译成英语再检索”，因为型号、品牌、法规术语和行业术语可能在翻译中损失精确匹配。更稳妥的设计是**保留原始 Query + Canonical Query + 若干检索变体**，同时运行原文 BM25 与跨语言 Dense Search。BGE-M3 论文报告其支持 100 多种语言，并统一支持 dense、multi-vector 与 sparse retrieval，这类多语言模型非常适合担任跨语言 Dense 层；具体模型仍应通过企业自己的多语言评测集决定。
 
 **LLM Query Analyzer 的输出必须 Schema 化：**
 
@@ -748,7 +748,7 @@ Cost / Latency
 
 形成候选排序。
 
-混合检索本身已有成熟实现基础：Milvus 官方支持 dense 与 sparse/BM25 多路检索后 reranking；Pinecone 支持 dense semantic 与 sparse lexical 的 hybrid 模式；Weaviate 支持 BM25、Vector 和 Hybrid Search。citeturn15search1turn17search3turn15search4
+混合检索本身已有成熟实现基础：Milvus 官方支持 dense 与 sparse/BM25 多路检索后 reranking；Pinecone 支持 dense semantic 与 sparse lexical 的 hybrid 模式；Weaviate 支持 BM25、Vector 和 Hybrid Search。
 
 推荐 Router 评分起始式：
 
@@ -846,7 +846,7 @@ def route(query_profile, registry, top_k_max=4):
     return split_primary_and_supporting(selected, query_profile)
 ```
 
-Reciprocal Rank Fusion 是一种经典的多排序结果融合方法；在这里可用来融合 Dense 与 Lexical 候选，再由业务特征重排。citeturn7search10
+Reciprocal Rank Fusion 是一种经典的多排序结果融合方法；在这里可用来融合 Dense 与 Lexical 候选，再由业务特征重排。
 
 关键是 Router 返回的不是“需要创建的新插件”，而是：
 
@@ -1001,7 +1001,7 @@ agentBudget:
 
 这些不是行业标准，而是防止 Agent 无限循环的初始守护值。
 
-还应注意：DeepSeek Harness 的 Plan Mode 官方定义是**软指导**，Sandbox 与 Approval 独立执行安全限制，因此不能把“Agent 的计划”本身当作授权系统。citeturn14search20
+还应注意：DeepSeek Harness 的 Plan Mode 官方定义是**软指导**，Sandbox 与 Approval 独立执行安全限制，因此不能把“Agent 的计划”本身当作授权系统。
 
 ## 分层 RAG、证据融合与治理验证
 
@@ -1039,7 +1039,7 @@ Query
 → Evidence Top 6–10
 ```
 
-Milvus 官方已经提供 Dense、BM25 Full Text、Hybrid Search 和 Reranking 等能力；Weaviate 也能同时执行 Vector、BM25 和 Hybrid Search；Pinecone 提供 Dense/Sparse Hybrid 与 Metadata Filter。FAISS 则是专注高效 Dense Vector Similarity Search 的库，更适合嵌入式、原型或由企业自己补齐元数据和服务治理的方案。citeturn15search13turn15search9turn15search4turn17search3turn17search8turn16search2
+Milvus 官方已经提供 Dense、BM25 Full Text、Hybrid Search 和 Reranking 等能力；Weaviate 也能同时执行 Vector、BM25 和 Hybrid Search；Pinecone 提供 Dense/Sparse Hybrid 与 Metadata Filter。FAISS 则是专注高效 Dense Vector Similarity Search 的库，更适合嵌入式、原型或由企业自己补齐元数据和服务治理的方案。
 
 **向量后端选择：**
 
@@ -1050,7 +1050,7 @@ Milvus 官方已经提供 Dense、BM25 Full Text、Hybrid Search 和 Reranking �
 | Weaviate | 希望一体化搜索 | Vector/BM25/Hybrid、多租户 | 设计 Collection/Tenant |
 | Pinecone | 托管优先 | Namespace、Metadata、Hybrid、Serverless | 成本随使用与 Namespace 大小管理 |
 
-Pinecone Serverless 当前的查询 Read Unit 与目标 Namespace 大小相关，其官方成本说明显示查询读取量随目标 Namespace 大小线性变化，并设有最小 RU；这进一步说明在大型多租户场景中，用合理 Namespace 减少扫描范围既是隔离策略，也可能成为成本优化手段。citeturn17search2turn17search1
+Pinecone Serverless 当前的查询 Read Unit 与目标 Namespace 大小相关，其官方成本说明显示查询读取量随目标 Namespace 大小线性变化，并设有最小 RU；这进一步说明在大型多租户场景中，用合理 Namespace 减少扫描范围既是隔离策略，也可能成为成本优化手段。
 
 **Chunk 策略不应只有固定 Token 大小。**
 
@@ -1144,7 +1144,7 @@ subquery D → competitor.public-web
 
 每个子 Query 都带自己的 Scope 和 Evidence Requirement，最后在 Evidence 层汇合，而不是把四个插件的全部 Context 拼起来。
 
-这正符合 Modular RAG 将 Routing、Scheduling、Fusion 独立化的思想，也符合 Agentic RAG 将多阶段检索纳入动态决策的方向。citeturn14search2turn14search7
+这正符合 Modular RAG 将 Routing、Scheduling、Fusion 独立化的思想，也符合 Agentic RAG 将多阶段检索纳入动态决策的方向。
 
 **证据融合必须先把文本转换成 Claim。**
 
@@ -1386,7 +1386,7 @@ external-research-agent:
     cannot read confidential customer files
 ```
 
-安全边界必须在模型之外强制执行。OWASP 关于 LLM/GenAI 的安全指导明确指出，Prompt Injection 可以来自直接输入、间接文档甚至多语言/混淆输入；其治理建议也强调关键授权、权限边界不能仅依赖 System Prompt，而应由外部确定性系统执行。citeturn19search4turn19search19
+安全边界必须在模型之外强制执行。OWASP 关于 LLM/GenAI 的安全指导明确指出，Prompt Injection 可以来自直接输入、间接文档甚至多语言/混淆输入；其治理建议也强调关键授权、权限边界不能仅依赖 System Prompt，而应由外部确定性系统执行。
 
 因此：
 
@@ -1411,7 +1411,7 @@ Retrieved document
 
 这样的间接 Prompt Injection。
 
-**Harness 安全边界还需要特别注意。** Harness 工具注册属于可信的同进程契约，Sandbox 的具体模式主要约束文件系统效果；若企业需要把第三方未知代码作为“不可信插件”运行，不能仅依赖同进程插件体系，应放进独立容器、MicroVM、Remote Executor 或专门隔离服务，并对网络 Egress 单独控制。Harness 的 Approval 服务则适合在高风险工具操作前实现显式批准。citeturn12search4turn12search2turn12search16
+**Harness 安全边界还需要特别注意。** Harness 工具注册属于可信的同进程契约，Sandbox 的具体模式主要约束文件系统效果；若企业需要把第三方未知代码作为“不可信插件”运行，不能仅依赖同进程插件体系，应放进独立容器、MicroVM、Remote Executor 或专门隔离服务，并对网络 Egress 单独控制。Harness 的 Approval 服务则适合在高风险工具操作前实现显式批准。
 
 因此建议安全等级：
 
@@ -1432,11 +1432,11 @@ L4 不可信第三方代码
     Container/MicroVM isolation
 ```
 
-DeepSeek Harness 工具管线提供 `pre-execute`、Guard、execute 与 post-execute 等拦截点，适合把权限、限流、超时、审计和结果清洗插入工具调用链。citeturn14search16
+DeepSeek Harness 工具管线提供 `pre-execute`、Guard、execute 与 post-execute 等拦截点，适合把权限、限流、超时、审计和结果清洗插入工具调用链。
 
 ## 运行时、部署、运维、性能与成本
 
-由于 Harness 当前仍处于 Developer Preview，并明确存在 breaking changes，生产项目不能把业务插件直接耦合到大量 Harness 内部类型。推荐增加一个薄的 `HarnessAdapter`：企业业务代码只使用自己的 `PluginContext`、`EvidenceService`、`PolicyService` 等接口，由 Adapter 将其映射到 Cordis Context。citeturn14search9
+由于 Harness 当前仍处于 Developer Preview，并明确存在 breaking changes，生产项目不能把业务插件直接耦合到大量 Harness 内部类型。推荐增加一个薄的 `HarnessAdapter`：企业业务代码只使用自己的 `PluginContext`、`EvidenceService`、`PolicyService` 等接口，由 Adapter 将其映射到 Cordis Context。
 
 推荐代码组织：
 
@@ -1555,7 +1555,7 @@ Quality Gate
 Production
 ```
 
-Harness 的 Profile/Bundle 层级适合组合不同部署配置，但生产回滚仍建议使用版本化 Artifact + Blue/Green/Canary，而不是把开发期热加载当成唯一生产发布机制。Profile 的 Bundle 和 Patch 顺序由 Harness 官方定义。citeturn14search29
+Harness 的 Profile/Bundle 层级适合组合不同部署配置，但生产回滚仍建议使用版本化 Artifact + Blue/Green/Canary，而不是把开发期热加载当成唯一生产发布机制。Profile 的 Bundle 和 Patch 顺序由 Harness 官方定义。
 
 **回滚必须同时覆盖四个层面：**
 
@@ -1606,7 +1606,7 @@ knowledge-active
 | 云端 | 中型 | 云 DB/Vector/Object | API | 运维最简单 | 云依赖 |
 | 混合 | 中大型 | 私有知识本地/专有云 | 多 Provider | 安全与弹性平衡 | 网络治理最复杂 |
 
-DeepSeek Harness 官方的数据处理说明采用 local-first 思路，默认的用户输入、模型输出、Session Context、工具调用、附件等可保存在本地，Telemetry 也可按部署配置；企业部署仍应自行定义完整的数据驻留和日志保留政策。citeturn8search0
+DeepSeek Harness 官方的数据处理说明采用 local-first 思路，默认的用户输入、模型输出、Session Context、工具调用、附件等可保存在本地，Telemetry 也可按部署配置；企业部署仍应自行定义完整的数据驻留和日志保留政策。
 
 **网络与安全架构：**
 
@@ -1702,7 +1702,7 @@ Metadata
 
 这些是项目目标值，不代表特定产品保证。
 
-**可观测性。** OpenTelemetry 的 GenAI 语义规范正在覆盖模型、数据源、Token 使用等 GenAI 属性；官方文档和近期示例也强调 Token、Latency 等指标可用于成本与性能分析。Telemetry 自身可能包含敏感数据，因此 OpenTelemetry 也明确建议最小化敏感数据采集。citeturn19search2turn19search5turn19search20
+**可观测性。** OpenTelemetry 的 GenAI 语义规范正在覆盖模型、数据源、Token 使用等 GenAI 属性；官方文档和近期示例也强调 Token、Latency 等指标可用于成本与性能分析。Telemetry 自身可能包含敏感数据，因此 OpenTelemetry 也明确建议最小化敏感数据采集。
 
 建议链路：
 
@@ -1803,7 +1803,7 @@ Om = 每月输出百万Token
 h  = Cache Hit比例
 ```
 
-截至 2026 年 8 月 19 日，DeepSeek 中国区官方价格页面列出的 `deepseek-v4-flash` 高峰期缓存未命中输入为 **3 元/百万 Token**、输出 **9 元/百万 Token**；`deepseek-v4-pro` 分别为 **9 元和 27 元**。空闲时段为高峰价格的一半；缓存命中输入价格进一步大幅降低。此次价格体系于 2026 年 8 月 16 日生效，因此成本模型必须把模型价格作为配置项，而不能硬编码。citeturn13view1turn13view2
+截至 2026 年 8 月 19 日，DeepSeek 中国区官方价格页面列出的 `deepseek-v4-flash` 高峰期缓存未命中输入为 **3 元/百万 Token**、输出 **9 元/百万 Token**；`deepseek-v4-pro` 分别为 **9 元和 27 元**。空闲时段为高峰价格的一半；缓存命中输入价格进一步大幅降低。此次价格体系于 2026 年 8 月 16 日生效，因此成本模型必须把模型价格作为配置项，而不能硬编码。
 
 以下仅计算**模型 Token 费**，假设全部缓存未命中：
 
@@ -1874,7 +1874,7 @@ Replication
 Backup
 ```
 
-因此真实容量必须由具体 Vector DB 的 Sizing Tool 或压测确定。Milvus 官方也提供基于向量数量、维度、索引类型等参数进行容量规划的工具与架构指导。citeturn11search19turn11search31
+因此真实容量必须由具体 Vector DB 的 Sizing Tool 或压测确定。Milvus 官方也提供基于向量数量、维度、索引类型等参数进行容量规划的工具与架构指导。
 
 建议给项目经理的**非模型基础设施预算占位值**，在云商选型前仅用于预算分档：
 
@@ -1916,7 +1916,7 @@ Backup
 
 的闭环。
 
-Ragas 当前提供 Context Precision、Context Recall、Faithfulness、Response Relevancy 以及 Agent/Tool Call 等评测指标；其中 Context Precision 衡量相关 Chunk 是否排在前面，Context Recall 关注必要信息是否被检出，Faithfulness 关注最终回答中的 Claim 是否能得到检索 Context 支撑。citeturn19search0turn19search9turn19search12turn19search6
+Ragas 当前提供 Context Precision、Context Recall、Faithfulness、Response Relevancy 以及 Agent/Tool Call 等评测指标；其中 Context Precision 衡量相关 Chunk 是否排在前面，Context Recall 关注必要信息是否被检出，Faithfulness 关注最终回答中的 Claim 是否能得到检索 Context 支撑。
 
 **评测体系必须分层：**
 
@@ -1985,7 +1985,7 @@ Citation Coverage = 100%
 | Adversarial | Prompt Injection、数据投毒、权限提升 |
 | DR | DB恢复、索引重建、版本回滚 |
 
-OWASP 的 LLM/GenAI 风险体系当前涵盖 Prompt Injection、敏感信息泄露、Supply Chain、Data/Model Poisoning、Improper Output Handling、Excessive Agency、Vector/Embedding Weaknesses、Misinformation 和 Unbounded Consumption 等类别，因此对插件/RAG/Agent 系统的安全测试不应只测试传统 API 漏洞。citeturn19search10turn19search24
+OWASP 的 LLM/GenAI 风险体系当前涵盖 Prompt Injection、敏感信息泄露、Supply Chain、Data/Model Poisoning、Improper Output Handling、Excessive Agency、Vector/Embedding Weaknesses、Misinformation 和 Unbounded Consumption 等类别，因此对插件/RAG/Agent 系统的安全测试不应只测试传统 API 漏洞。
 
 **默认中型项目实施路线图：**
 
@@ -2413,36 +2413,36 @@ Contract
 
 第一优先级应持续追踪 DeepSeek 官方资料，因为 Harness 仍在快速迭代：
 
-1. **DeepSeek Harness 官方 Architecture / Reference**：用于理解 Cordis、插件化 Agent Loop、Session、Capability Seams。citeturn14search0turn14search28
-2. **DeepSeek Harness 官方 GitHub Repository / README**：用于跟踪当前实现以及 Developer Preview 的兼容性状态。citeturn14search5turn14search9
-3. **DeepSeek Harness Cordis Primer**：用于插件 Service、Context、依赖、Event、Effect 与生命周期设计。citeturn14search1
-4. **DeepSeek Harness Tool Execution Pipeline、Sandbox、Approval**：用于权限和工具治理设计。citeturn14search16turn12search2turn12search16
-5. **DeepSeek API 中文模型与价格文档**：成本模型应动态引用，而不是把价格写死在业务代码。citeturn13view1turn13view2
+1. **DeepSeek Harness 官方 Architecture / Reference**：用于理解 Cordis、插件化 Agent Loop、Session、Capability Seams。
+2. **DeepSeek Harness 官方 GitHub Repository / README**：用于跟踪当前实现以及 Developer Preview 的兼容性状态。
+3. **DeepSeek Harness Cordis Primer**：用于插件 Service、Context、依赖、Event、Effect 与生命周期设计。
+4. **DeepSeek Harness Tool Execution Pipeline、Sandbox、Approval**：用于权限和工具治理设计。
+5. **DeepSeek API 中文模型与价格文档**：成本模型应动态引用，而不是把价格写死在业务代码。
 
 理论与 RAG 架构层优先阅读：
 
-6. **《Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks》**：本文插件索引、Routing、Scheduling、Fusion 和多种执行图模式的理论基础之一。citeturn14search2turn14search6
-7. **《Agentic Retrieval-Augmented Generation: A Survey on Agentic RAG》最新修订版**：用于 Agentic RAG、Planning、Reflection、Tool Use 和动态检索体系。citeturn14search3turn14search7
-8. **BGE-M3 论文**：多语言 Dense/Sparse Retrieval 的候选实现参考。citeturn7academia27
-9. **Reciprocal Rank Fusion 原始研究**：多检索排名融合的基础方法。citeturn7search10
+6. **《Modular RAG: Transforming RAG Systems into LEGO-like Reconfigurable Frameworks》**：本文插件索引、Routing、Scheduling、Fusion 和多种执行图模式的理论基础之一。
+7. **《Agentic Retrieval-Augmented Generation: A Survey on Agentic RAG》最新修订版**：用于 Agentic RAG、Planning、Reflection、Tool Use 和动态检索体系。
+8. **BGE-M3 论文**：多语言 Dense/Sparse Retrieval 的候选实现参考。
+9. **Reciprocal Rank Fusion 原始研究**：多检索排名融合的基础方法。
 
 工程框架层：
 
-10. **LlamaIndex Router / Recursive Retriever 官方 API**：尤其值得参考 IndexNode 进入另一个 Retriever/Query Engine 的递归检索机制，与本文“插件作为索引节点”的思想高度相关。citeturn18view0
-11. **LangGraph Agentic RAG 官方示例**：参考检索决策、Document Grading、Query Rewrite 与条件图。citeturn16search0
-12. **FAISS 官方文档**：轻量 Dense Similarity Search 实现基线。citeturn16search2
+10. **LlamaIndex Router / Recursive Retriever 官方 API**：尤其值得参考 IndexNode 进入另一个 Retriever/Query Engine 的递归检索机制，与本文“插件作为索引节点”的思想高度相关。
+11. **LangGraph Agentic RAG 官方示例**：参考检索决策、Document Grading、Query Rewrite 与条件图。
+12. **FAISS 官方文档**：轻量 Dense Similarity Search 实现基线。
 
 向量数据库层：
 
-13. **Milvus 官方 Hybrid Search / BM25 / Reranking 文档**。citeturn15search1turn15search9turn15search13
-14. **Weaviate 官方 Hybrid Search 与 Multi-tenancy 文档**。citeturn15search2turn15search4
-15. **Pinecone 官方 Multitenancy、Hybrid Search、Metadata 与 Cost 文档**。citeturn17search1turn17search2turn17search3turn17search7
+13. **Milvus 官方 Hybrid Search / BM25 / Reranking 文档**。
+14. **Weaviate 官方 Hybrid Search 与 Multi-tenancy 文档**。
+15. **Pinecone 官方 Multitenancy、Hybrid Search、Metadata 与 Cost 文档**。
 
 治理与评测层：
 
-16. **OWASP GenAI / LLM Security 项目**：用于 Prompt Injection、RAG/Embedding、Agent 权限、安全边界与供应链测试。citeturn19search4turn19search10turn19search19
-17. **Ragas 官方评测文档**：Context Precision、Context Recall、Faithfulness、Agent/Tool Metrics。citeturn19search0turn19search6turn19search9turn19search12
-18. **OpenTelemetry GenAI 与敏感数据处理文档**：用于模型、Token、Trace、成本和数据安全可观测性。citeturn19search2turn19search5turn19search20
+16. **OWASP GenAI / LLM Security 项目**：用于 Prompt Injection、RAG/Embedding、Agent 权限、安全边界与供应链测试。
+17. **Ragas 官方评测文档**：Context Precision、Context Recall、Faithfulness、Agent/Tool Metrics。
+18. **OpenTelemetry GenAI 与敏感数据处理文档**：用于模型、Token、Trace、成本和数据安全可观测性。
 
 最终架构决策可以归结为一句工程原则：
 
@@ -2461,3 +2461,18 @@ Plugin Contract
 ```
 
 **这些契约一旦建立，底层模型、Embedding、Vector DB、Reranker，甚至 Harness Runtime 本身，都可以逐步替换而不推倒整个多品牌内容生产系统。**
+
+## 可核验参考链接
+
+以下链接替代了原研究环境中的临时引用标记。未能在本次清理中确认的厂商或论文来源不再伪造链接；相关论断应在正式发布前逐项复核。
+
+1. [LangGraph：Workflows and agents](https://docs.langchain.com/oss/python/langgraph/workflows-agents)
+2. [LlamaIndex：RouterRetriever](https://docs.llamaindex.ai/en/stable/api_reference/retrievers/router/)
+3. [OpenTelemetry：Semantic Conventions](https://opentelemetry.io/docs/concepts/semantic-conventions/)
+4. [OpenTelemetry：GenAI semantic conventions](https://github.com/open-telemetry/semantic-conventions-genai)
+5. [OpenTelemetry：GenAI spans](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
+6. [OWASP：Top 10 for Large Language Model Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+7. [Ragas：Metrics](https://docs.ragas.io/en/stable/concepts/metrics/)
+8. [FAISS：官方 GitHub 仓库](https://github.com/facebookresearch/faiss)
+
+> 注：本文中的 DeepSeek Harness、Cordis、模型价格、容量和性能相关内容具有版本或时间敏感性，应以对应厂商的当前官方文档、代码仓库和价格页面复核后再用于生产决策。
