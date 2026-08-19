@@ -230,18 +230,18 @@ graph LR
 
 假设查询：
 
-> 为 FPM 番茄酱包装线写一篇面向德国食品厂采购经理的 LinkedIn 内容，突出卫生设计，但所有技术宣传必须有依据。
+> 为 Brand-A 番茄酱包装线写一篇面向德国食品厂采购经理的 LinkedIn 内容，突出卫生设计，但所有技术宣传必须有依据。
 
 Query Analyzer 不应该构造：
 
 ```text
-FPM × Sauce Line × Germany × LinkedIn × Copywriting
+Brand-A × Sauce Line × Germany × LinkedIn × Copywriting
 ```
 
 这样的新插件，而是输出：
 
 ```yaml
-brand: FPM
+brand: Brand-A
 product_domain: sauce_packaging
 market: DE
 language: de-DE
@@ -257,7 +257,7 @@ constraints:
 Router 随后在索引图中找到**地址**：
 
 ```text
-brand.fpm
+brand.brand-a
 product.sauce-packaging
 channel.linkedin
 task.social-content
@@ -271,7 +271,7 @@ task.social-content
     ↓ needs
 product.sauce-packaging
     ↓ query scope
-brand.fpm
+brand.brand-a
     ↓ evidence gap
 policy.technical-claims
     ↓ formatter
@@ -583,9 +583,9 @@ Pinecone 官方数据模型同样强调 Record ID、Dense/Sparse Vector 和可�
     "rerank_score": 0.91
   },
   "scope": {
-    "brand": "FPM",
+    "brand": "Brand-A",
     "market": ["DE", "EU"],
-    "product": "SAUCE-LINE-X"
+    "product": "PRODUCT-LINE-EXAMPLE"
   },
   "authority": 90,
   "effective_at": "2026-06-01T00:00:00Z"
@@ -665,7 +665,7 @@ aliases:
 {
   "intent": "social_content_generation",
   "entities": {
-    "brands": ["FPM"],
+    "brands": ["Brand-A"],
     "product_families": ["sauce_packaging"],
     "products": [],
     "markets": ["DE"],
@@ -857,7 +857,7 @@ Reciprocal Rank Fusion 是一种经典的多排序结果融合方法；在这里
   ],
   "supporting": [
     "product.sauce-packaging",
-    "brand.fpm",
+    "brand.brand-a",
     "channel.linkedin",
     "policy.technical-claims"
   ]
@@ -1138,7 +1138,7 @@ Planner 可以生成：
 ```text
 subquery A → product.sauce-packaging
 subquery B → case.food-factory
-subquery C → brand.fpm
+subquery C → brand.brand-a
 subquery D → competitor.public-web
 ```
 
@@ -2461,6 +2461,96 @@ Plugin Contract
 ```
 
 **这些契约一旦建立，底层模型、Embedding、Vector DB、Reranker，甚至 Harness Runtime 本身，都可以逐步替换而不推倒整个多品牌内容生产系统。**
+
+## 从研究架构到可落地工作流
+
+前述架构应按以下工程边界落地，而不是把一组工具简单串联：
+
+```text
+Plugin Registry / Index
+        ↓
+Task Index Router
+        ↓
+Workflow Orchestrator
+        ↓
+Task Workflow: technical_solution | blog | product_detail
+        ↓
+Brand Site Pack + Task Profile
+        ↓
+Route / Material / Traffic / Media / Layout / Renderer Nodes
+        ↓
+Verifier + Evidence + Session/Audit + Publication Receipt
+```
+
+### 三个控制层必须分开
+
+- **Registry / Index** 只登记 manifest、能力、作用域、权限、版本和依赖；发现、启用、停用和版本校验必须确定性、可回滚。
+- **Task Index Router** 根据 `brand + task_type + product + customer/opportunity + route_file` 选择 Site Pack、Task Profile 和真实路由，输出确定性 workflow plan。它不生成正文、不替代 Agent Loop、不直接发布。
+- **Workflow Orchestrator** 把 plan 编译成 typed DAG/状态机，控制依赖、顺序、条件分支、有限重试、checkpoint、恢复和补偿。模型不能自由猜插件顺序。
+
+每个节点至少声明：输入、输出、依赖、前置条件、后置条件、错误类型、重试策略、补偿动作和 receipt。推荐节点状态为：
+
+```text
+PENDING → RUNNING → PASS
+                   ↘ RETRYABLE_FAILED → RUNNING
+                   ↘ HOLD
+                   ↘ COMPENSATED
+```
+
+### 三条标准工作流
+
+生产等价能力不应按“品牌 × 任务”复制成大量插件，而应由通用节点、独立 Site Pack 和任务 Profile 组合：
+
+1. `technical_solution_workflow`
+2. `blog_workflow`
+3. `product_detail_workflow`
+
+典型链路为：
+
+```text
+ingress
+→ plugin_index
+→ route_resolution
+→ product_binding
+→ material_read
+→ traffic_profile
+→ customer/opportunity_material
+→ media_selection
+→ image_context
+→ layout
+→ content_generation
+→ renderer
+→ verifier
+→ candidate_publication
+→ live_url_check
+→ publication_receipt
+→ audit_close
+```
+
+缺资料、品牌不匹配、任务不匹配或作用域不明时必须 fail-closed。例如 `HOLD_MATERIAL_NOT_FOUND`、`HOLD_LAYOUT_NOT_FOUND`、`HOLD_MEDIA_SCOPE_MISMATCH`、`HOLD_LIVE_URL_UNVERIFIED`。候选页面发布成功但 URL 验收失败时，应执行候选补偿删除或回滚，并记录 `COMPENSATED`；这不等于生产发布成功。
+
+### 生产等价不等于复制生产代码
+
+生产网关、客户端流程、路由文件、物料绑定、布局、媒体、渲染和发布事务应被拆成职责清晰的正式 Cordis 插件，通过 `inject`、service、event、tool contract 和配置组合。不得复制一个新的巨型控制器，也不得在 Harness 外再隐藏一套流程控制器。
+
+运行闭包还必须真实包含这些插件：仅有插件目录、静态 schema、工具注册、单元测试或 HTTP 200，都不能证明 carrier 已具备目标能力。需要独立验证 runtime dependency closure、真实插件调用、状态转移、输入输出、候选页面和回执。
+
+### 证据与验收分级
+
+报告中的“完成”应拆成四层：
+
+```text
+设计存在
+→ 候选单元通过
+→ 真实候选工作流回执
+→ 生产能力（需单独授权和验收）
+```
+
+候选阶段应保留 route/material/layout/media/render artifact 的 SHA、workflow plan、DAG transition、tool/result 摘要、session/audit、candidate post_id、Live URL、HTTP 验收和清理/补偿证据，同时明确 `production_touched=false`、`production_wp_cli_called=false`、`sender_called=false`、`ota_triggered=false`。任何未证明项保留为 `HOLD` 或 `PENDING`，不得用 mock、静态 JSON、假回执或一次 HTTP 200 凑成完成。
+
+### Site Pack 的脱敏边界
+
+公开版本只保留抽象的 `brand-a`、`brand-b`、`brand-c` 和 `site-pack` 示例。真实品牌名、站点域名、生产路径、机会编号、客户材料、内部岗位、凭据、服务器地址、产品型号和商业数据应留在私有项目中。每个 Site Pack 的独立资料、layout、image context、renderer adapter、page schema、task support matrix 和缺口状态仍应作为工程概念保留，但不应公开真实内容。
 
 ## 可核验参考链接
 

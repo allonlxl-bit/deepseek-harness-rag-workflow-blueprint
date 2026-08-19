@@ -6,11 +6,12 @@ The central proposal is to treat enterprise capabilities as an addressable plugi
 
 ## Status
 
-This repository is an early public research draft. It is not a production deployment, vendor performance guarantee, or security certification. Examples are illustrative and must be adapted and independently verified.
+This repository is an early public research draft. It is not a production deployment, vendor performance guarantee, or security certification. Examples are illustrative and must be adapted and independently verified. Business names and internal identifiers have been replaced with neutral placeholders.
 
 ## Contents
 
 - [`docs/deep-research-report.md`](docs/deep-research-report.md) — complete architecture and implementation research draft
+- The report includes an implementation-grounded revision covering registry/index, deterministic workflow orchestration, site packs, evidence receipts, candidate-only publication and fail-closed acceptance.
 - `docs/` — future topic-specific documents
 - `schemas/` — future contract and manifest schemas
 - `examples/` — future generic examples
